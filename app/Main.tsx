@@ -733,6 +733,10 @@ export default function Main() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* spacer */}
+      <div className="h-32" />
+
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex items-center justify-center">
         <div className="flex items-center space-x-4">
           <canvas ref={clientCanvasRef} className="w-20 h-10" />

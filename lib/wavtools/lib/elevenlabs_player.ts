@@ -1,5 +1,7 @@
 import * as stream from "stream";
 
+let audioElements: HTMLAudioElement[] = [];
+
 export function playAudioFromResponse(
   stream: stream.Readable,
   onAudioLoaded: () => void,
@@ -15,6 +17,16 @@ export function playAudioFromResponse(
   audio.src = URL.createObjectURL(mediaSource);
   audio.volume = 0.8;
   audio.loop = true;
+
+  // stop all other audio elements, and remove them from the audioElements array and dispose of them
+  audioElements.forEach((element) => {
+    element.pause();
+    element.remove();
+  });
+
+  audioElements = [];
+
+  audioElements.push(audio);
 
   mediaSource.addEventListener("sourceopen", () => {
     const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
