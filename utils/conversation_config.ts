@@ -70,27 +70,14 @@ Examples:
 ONLY generate the image description, do not generate any other text.`;
 };
 
-export const createSoundEffectPrompt = (conversation: ItemType[]) => {
-  return `Generate an ASMR provoking sound effect description based on the context of this conversation.
+export const createSoundEffectPrompt = (imageDescription: string) => {
+  return `Generate an ASMR provoking sound effect description based on this image description:
 
-Examples:
-- soft rain, high-definition sound, ASMR-style
-- ocean waves, high-definition sound, ASMR-style
-- soft tapping on a wooden surface, high-definition sound, ASMR-style
-- birds chirping, high-definition sound, ASMR-style
+<image_description>
+${imageDescription}
+</image_description>
 
-<conversation>
-${conversation
-  .map(
-    (item) => `<message>
-  <role>${item.role}</role>
-  <text>${item.formatted.text}</text>
-</message>`
-  )
-  .join("\n")}
-</conversation>
-
-DO NOT generate descriptions of whispering voices. Instead, come up with a creative relaxing effect.
+Make it 420 characters or less.
 
 ONLY generate the sound effect description, do not generate any other text.`;
 };

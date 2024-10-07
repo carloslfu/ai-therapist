@@ -448,6 +448,7 @@ export default function Main() {
     };
   }, []);
 
+  const lastGeneratedTimestamp = useRef(0);
   const isPlayingRef = useRef(false);
   const isGeneratingSoundEffectRef = useRef(false);
 
@@ -461,11 +462,15 @@ export default function Main() {
    * Generate sound effects
    */
   useEffect(() => {
+    const currentTime = Date.now();
+    const timeSinceLastGenerated = currentTime - lastGeneratedTimestamp.current;
+
     if (
       items.length === 0 ||
-      isPlayingRef.current ||
       isGeneratingSoundEffectRef.current ||
-      (items.length > 2 && items[items.length - 1].role !== "user")
+      (items.length > 1 && items[items.length - 1].role !== "user") ||
+      items.length <= 2 ||
+      timeSinceLastGenerated < 60000
     ) {
       return;
     }
@@ -476,23 +481,52 @@ export default function Main() {
 
     console.log("generating sound effect");
 
-    async function generateSoundEffect() {
-      const repeatTimes = 3;
-
-      const soundDescription = await generateText({
+    async function generate() {
+      const imageDescription = await generateText({
         model: openai("gpt-4o-2024-08-06"),
-        prompt: createSoundEffectPrompt(lastFiveMessages),
+        prompt: createImagePrompt(lastFiveMessages),
         maxTokens: 4000,
         temperature: 0.3,
       });
 
-      const sound = soundDescription.text;
+      const imagePrompt = imageDescription.text;
 
-      console.log("----- sound", sound);
+      console.log("----- imagePrompt", imagePrompt);
+
+      const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
+        input: {
+          prompt: imagePrompt,
+        },
+        logs: true,
+        onQueueUpdate: (update) => {
+          if (update.status === "IN_PROGRESS") {
+            update.logs.map((log) => log.message).forEach(console.log);
+          }
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log("image generated", (result as any).images[0].url);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setImageUrl((result as any).images[0].url);
+
+      // ---- Audio generation
+
+      const soundDescription = await generateText({
+        model: openai("gpt-4o-2024-08-06"),
+        prompt: createSoundEffectPrompt(imagePrompt),
+        maxTokens: 4000,
+        temperature: 0.3,
+      });
+
+      const soundPrompt = soundDescription.text.slice(0, 420);
+
+      console.log("----- soundPrompt", soundPrompt);
 
       const audio =
         await elevenLabsClientRef.current.textToSoundEffects.convert({
-          text: sound,
+          text: soundPrompt,
           duration_seconds: 22,
           prompt_influence: 0.3,
         });
@@ -502,7 +536,6 @@ export default function Main() {
 
         playAudioFromResponse(
           audio,
-          repeatTimes,
           () => {},
           (isPlaying) => {
             console.log("isPlaying", isPlaying);
@@ -521,38 +554,7 @@ export default function Main() {
       isGeneratingSoundEffectRef.current = false;
     }
 
-    generateSoundEffect();
-
-    async function generateImage() {
-      const image = await generateText({
-        model: openai("gpt-4o-2024-08-06"),
-        prompt: createImagePrompt(lastFiveMessages),
-        maxTokens: 4000,
-        temperature: 0.3,
-      });
-
-      console.log("----- image", image);
-
-      const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
-        input: {
-          prompt: image,
-        },
-        logs: true,
-        onQueueUpdate: (update) => {
-          if (update.status === "IN_PROGRESS") {
-            update.logs.map((log) => log.message).forEach(console.log);
-          }
-        },
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log("image generated", (result as any).images[0].url);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setImageUrl((result as any).images[0].url);
-    }
-
-    generateImage();
+    generate();
   }, [items]);
 
   /**
