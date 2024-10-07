@@ -43,26 +43,20 @@ export default function Main() {
    * Ask user for API Key
    * If we're using the local relay server, we don't need this
    */
-  const apiKey =
-    localStorage.getItem("tmp::voice_api_key") ||
-    prompt("OpenAI API Key") ||
-    "";
+  const apiKey = localStorage.getItem("tmp::voice_api_key") || "";
   if (apiKey !== "") {
     localStorage.setItem("tmp::voice_api_key", apiKey);
   }
 
   // ElevenLabs API Key
   const elevenLabsApiKey =
-    localStorage.getItem("tmp::elevenlabs_api_key") ||
-    prompt("ElevenLabs API Key") ||
-    "";
+    localStorage.getItem("tmp::elevenlabs_api_key") || "";
 
   if (elevenLabsApiKey !== "") {
     localStorage.setItem("tmp::elevenlabs_api_key", elevenLabsApiKey);
   }
 
-  const falApiKey =
-    localStorage.getItem("tmp::fal_api_key") || prompt("Fal API Key") || "";
+  const falApiKey = localStorage.getItem("tmp::fal_api_key") || "";
 
   if (falApiKey !== "") {
     localStorage.setItem("tmp::fal_api_key", falApiKey);
