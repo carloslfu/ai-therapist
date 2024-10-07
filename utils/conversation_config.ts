@@ -79,5 +79,7 @@ ${imageDescription}
 
 Make it 320 characters or less. It should be short, like a few phrases.
 
+The sounds effect should be relaxing and soft.
+
 ONLY generate the sound effect description, do not generate any other text.`;
 };
