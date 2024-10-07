@@ -261,7 +261,7 @@ export default function Main() {
    */
   useEffect(() => {
     const conversationEls = [].slice.call(
-      document.body.querySelectorAll("[data-conversation-content]")
+      document.body.querySelectorAll(".conversation-content")
     );
     for (const el of conversationEls) {
       const conversationEl = el as HTMLDivElement;
@@ -552,11 +552,11 @@ export default function Main() {
               )}
             </div>
             <div className="w-1/2 pl-2 flex flex-col">
-              <div className="flex-grow overflow-auto bg-white rounded-lg shadow">
+              <div className="flex-grow overflow-hidden bg-white rounded-lg shadow flex flex-col">
                 <h2 className="text-lg font-semibold p-4 border-b">
                   Conversation
                 </h2>
-                <div className="p-4">
+                <div className="flex-grow overflow-y-auto p-4 conversation-content">
                   {!items.length && (
                     <p>Start a conversation by clicking the button below.</p>
                   )}

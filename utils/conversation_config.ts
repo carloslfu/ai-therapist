@@ -42,7 +42,7 @@ Make sure you always use a whispering very soft and gentle ASMR voice.
 IMPORTANT: ALWAYS whisper and use an ASMR voice.`;
 
 export const createImagePrompt = (conversation: ItemType[]) => {
-  return `You are an expert therapist that uses images to help people relax, and feel better.
+  return `You are an expert therapist that helps people relax, and feel better. You come up with image ideas based on the conversation.
 
 <conversation>
 ${conversation
@@ -55,7 +55,7 @@ ${conversation
   .join("\n")}
 </conversation>
 
-Examples:
+Here are examples of images you might generate:
 - Generate an image of a relaxing river, HD, realistic, appealing, beautiful, calming.
 - Generate an image of a relaxing ocean, HD, realistic, appealing, beautiful, calming.
 - Generate an image of a relaxing forest, HD, realistic, appealing, beautiful, calming.
@@ -67,11 +67,11 @@ Examples:
 - Generate an ASMR-provoking image of a caring woman in nature, a wife, HD, realistic, appealing, relaxing, cute, and handsome. Looking at the camera.
 - Generate an ASMR-provoking image of a caring man in nature, a husband, HD, realistic, appealing, relaxing, cute, and handsome. Looking at the camera.
 
-ONLY generate the image description, do not generate any other text.`;
+ONLY generate descriptions like above, do not generate any other text.`;
 };
 
 export const createSoundEffectPrompt = (imageDescription: string) => {
-  return `Generate an ASMR provoking sound effect description based on this image description:
+  return `Generate an ASMR-provoking sound effect description based on this image description:
 
 <image_description>
 ${imageDescription}
@@ -79,7 +79,7 @@ ${imageDescription}
 
 Make it 320 characters or less. It should be short, like a few phrases.
 
-The sounds effect should be relaxing and soft.
+The sounds effect should be relaxing and soft. DO NOT make it about whispering or talking. Do nature sounds like rain, ocean, or nature. Or things like a campfire, or a crackling fire.
 
 ONLY generate the sound effect description, do not generate any other text.`;
 };
