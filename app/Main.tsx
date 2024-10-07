@@ -18,7 +18,10 @@ import { Button } from "../components/button/Button";
 
 import * as fal from "@fal-ai/serverless-client";
 
-import { playAudioFromResponse } from "../lib/wavtools/lib/elevenlabs_player";
+import {
+  playAudioFromResponse,
+  stopAllAudio,
+} from "../lib/wavtools/lib/elevenlabs_player";
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -223,6 +226,7 @@ export default function Main() {
    * Disconnect and reset conversation state
    */
   const disconnectConversation = useCallback(async () => {
+    stopAllAudio();
     setIsConnected(false);
     setRealtimeEvents([]);
     setItems([]);
@@ -598,6 +602,9 @@ export default function Main() {
                     </div>
                   ))}
                 </div>
+
+                {/* spacer */}
+                <div className="h-4" />
               </div>
             </div>
           </div>

@@ -2,6 +2,15 @@ import * as stream from "stream";
 
 let audioElements: HTMLAudioElement[] = [];
 
+export function stopAllAudio() {
+  audioElements.forEach((element) => {
+    element.pause();
+    element.remove();
+  });
+
+  audioElements = [];
+}
+
 export function playAudioFromResponse(
   stream: stream.Readable,
   onAudioLoaded: () => void,
@@ -19,12 +28,7 @@ export function playAudioFromResponse(
   audio.loop = false;
 
   // stop all other audio elements, and remove them from the audioElements array and dispose of them
-  audioElements.forEach((element) => {
-    element.pause();
-    element.remove();
-  });
-
-  audioElements = [];
+  stopAllAudio();
 
   audioElements.push(audio);
 
