@@ -550,27 +550,6 @@ export default function Main() {
                   className="w-full h-auto mb-4 rounded-lg"
                 />
               )}
-              <div className="bg-white rounded-lg shadow p-4 mb-4">
-                <h2 className="text-lg font-semibold mb-2">
-                  Audio Visualization
-                </h2>
-                <div className="flex space-x-2">
-                  <div className="w-1/2">
-                    <h3 className="text-sm font-medium mb-1">Input</h3>
-                    <canvas
-                      ref={clientCanvasRef}
-                      className="w-full h-20 bg-gray-100 rounded"
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <h3 className="text-sm font-medium mb-1">Output</h3>
-                    <canvas
-                      ref={serverCanvasRef}
-                      className="w-full h-20 bg-gray-100 rounded"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
             <div className="w-1/2 pl-2 flex flex-col">
               <div className="flex-grow overflow-auto bg-white rounded-lg shadow">
@@ -617,16 +596,6 @@ export default function Main() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white rounded-lg shadow p-4">
               <h2 className="text-lg font-semibold mb-4">Events</h2>
-              <div className="mb-4">
-                <div className="flex space-x-2">
-                  <div className="w-1/2">
-                    <canvas ref={clientCanvasRef} className="w-full h-20" />
-                  </div>
-                  <div className="w-1/2">
-                    <canvas ref={serverCanvasRef} className="w-full h-20" />
-                  </div>
-                </div>
-              </div>
               <div ref={eventsScrollRef} className="h-64 overflow-auto">
                 {!realtimeEvents.length && <p>Awaiting connection...</p>}
                 {realtimeEvents.map((realtimeEvent) => {
@@ -755,38 +724,42 @@ export default function Main() {
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            {/* <div className="bg-white rounded-lg shadow p-4">
               <h2 className="text-lg font-semibold mb-4">set_memory()</h2>
               <pre className="text-xs bg-gray-100 p-2 rounded">
                 {JSON.stringify(memoryKv, null, 2)}
               </pre>
-            </div>
+            </div> */}
           </div>
         </TabsContent>
       </Tabs>
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex items-center justify-center">
-        <button
-          className={cn(
-            "flex items-center justify-center px-6 py-3 rounded-lg text-base font-medium transition-colors",
-            "focus:outline-none focus:ring-2 focus:ring-offset-2",
-            isConnected
-              ? "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500"
-              : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
-          )}
-          onClick={isConnected ? disconnectConversation : connectConversation}
-        >
-          {isConnected ? (
-            <>
-              <X className="mr-3 h-5 w-5" />
-              <span className="text-lg">Finish session</span>
-            </>
-          ) : (
-            <>
-              <Mic className="mr-3 h-5 w-5" />
-              <span className="text-lg">Start session</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center space-x-4">
+          <canvas ref={clientCanvasRef} className="w-20 h-10" />
+          <button
+            className={cn(
+              "flex items-center justify-center px-6 py-3 rounded-lg text-base font-medium transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-offset-2",
+              isConnected
+                ? "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500"
+                : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+            )}
+            onClick={isConnected ? disconnectConversation : connectConversation}
+          >
+            {isConnected ? (
+              <>
+                <X className="mr-3 h-5 w-5" />
+                <span className="text-lg">Finish session</span>
+              </>
+            ) : (
+              <>
+                <Mic className="mr-3 h-5 w-5" />
+                <span className="text-lg">Start session</span>
+              </>
+            )}
+          </button>
+          <canvas ref={serverCanvasRef} className="w-20 h-10" />
+        </div>
       </div>
     </div>
   );
