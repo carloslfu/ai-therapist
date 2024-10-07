@@ -510,7 +510,9 @@ export default function Main() {
   return (
     <div className="flex flex-col h-screen">
       <div className="p-2 bg-gray-100 flex items-center justify-between">
-        <h1 className="text-lg font-bold">AI Therapist (ASMR)</h1>
+        <h1 className="text-lg font-bold px-2 text-blue-600">
+          AI Therapist (ASMR)
+        </h1>
         <div className="flex space-x-2">
           <Button
             icon={Edit}
@@ -535,7 +537,10 @@ export default function Main() {
           />
         </div>
       </div>
-      <Tabs defaultValue="user" className="flex-grow overflow-hidden">
+      <Tabs
+        defaultValue="user"
+        className="flex-grow overflow-hidden max-h-[calc(100vh-100px)]"
+      >
         <TabsList className="bg-white border-b">
           <TabsTrigger value="user">User View</TabsTrigger>
           <TabsTrigger value="debug">Debug View</TabsTrigger>
@@ -569,9 +574,11 @@ export default function Main() {
                             : "text-green-600"
                         }`}
                       >
-                        {(
-                          conversationItem.role || conversationItem.type
-                        ).replaceAll("_", " ")}
+                        {conversationItem.role === "assistant"
+                          ? "therapist"
+                          : (
+                              conversationItem.role || conversationItem.type
+                            ).replaceAll("_", " ")}
                       </div>
                       <div className="mt-1">
                         {conversationItem.formatted.transcript ||
@@ -671,9 +678,11 @@ export default function Main() {
                             : "text-green-600"
                         }`}
                       >
-                        {(
-                          conversationItem.role || conversationItem.type
-                        ).replaceAll("_", " ")}
+                        {conversationItem.role === "assistant"
+                          ? "therapist"
+                          : (
+                              conversationItem.role || conversationItem.type
+                            ).replaceAll("_", " ")}
                       </span>
                       <button
                         onClick={() =>
@@ -746,18 +755,18 @@ export default function Main() {
               "focus:outline-none focus:ring-2 focus:ring-offset-2",
               isConnected
                 ? "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500"
-                : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+                : "bg-blue-200 text-blue-800 hover:bg-blue-300 focus:ring-blue-300"
             )}
             onClick={isConnected ? disconnectConversation : connectConversation}
           >
             {isConnected ? (
               <>
-                <X className="mr-3 h-5 w-5" />
+                <X className="mr-3 h-5 w-5 text-red-600" />
                 <span className="text-lg">Finish session</span>
               </>
             ) : (
               <>
-                <Mic className="mr-3 h-5 w-5" />
+                <Mic className="mr-3 h-5 w-5 text-blue-600" />
                 <span className="text-lg">Start session</span>
               </>
             )}

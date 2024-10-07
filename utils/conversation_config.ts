@@ -70,16 +70,18 @@ Here are examples of images you might generate:
 ONLY generate descriptions like above, do not generate any other text.`;
 };
 
-export const createSoundEffectPrompt = (imageDescription: string) => {
-  return `Generate an ASMR-provoking sound effect description based on this image description:
+export const createSoundEffectPrompt = (description: string) => {
+  return `Generate an ASMR-provoking sound effect description based on this description:
 
-<image_description>
-${imageDescription}
-</image_description>
+<description>
+${description}
+</description>
 
 Make it 320 characters or less. It should be short, like a few phrases.
 
 The sounds effect should be relaxing and soft. DO NOT make it about whispering or talking. Do nature sounds like rain, ocean, or nature. Or things like a campfire, or a crackling fire.
+
+Use acoustic and natural sounding instruments.
 
 ONLY generate the sound effect description, do not generate any other text.`;
 };
