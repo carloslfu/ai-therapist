@@ -150,7 +150,6 @@ export default function Main() {
   const resetAPIKey = useCallback(() => {
     const apiKey = prompt("OpenAI API Key");
     if (apiKey !== null) {
-      localStorage.clear();
       localStorage.setItem("tmp::voice_api_key", apiKey);
       window.location.reload();
     }
@@ -161,7 +160,6 @@ export default function Main() {
   const resetElevenLabsAPIKey = useCallback(() => {
     const elevenLabsApiKey = prompt("ElevenLabs API Key");
     if (elevenLabsApiKey !== null) {
-      localStorage.clear();
       localStorage.setItem("tmp::elevenlabs_api_key", elevenLabsApiKey);
       window.location.reload();
     }
@@ -170,7 +168,6 @@ export default function Main() {
   const resetFalAPIKey = useCallback(() => {
     const falApiKey = prompt("Fal API Key");
     if (falApiKey !== null) {
-      localStorage.clear();
       localStorage.setItem("tmp::fal_api_key", falApiKey);
       window.location.reload();
     }
