@@ -38,8 +38,7 @@ export function playAudioFromResponse(
   });
 
   audio.onended = () => {
-    audio.currentTime = 0;
-    audio.play();
+    onIsPlayingChange(false);
   };
 
   audio.addEventListener("error", (e) => {
