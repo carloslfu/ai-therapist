@@ -7,9 +7,9 @@ import { ElevenLabsClient } from "elevenlabs";
 import { ItemType } from "@openai/realtime-api-beta/dist/lib/client.js";
 import { WavRecorder, WavStreamPlayer } from "@/lib/wavtools/index.js";
 import {
-  instructions,
   createSoundEffectPrompt,
   createImagePrompt,
+  createInstructions,
 } from "../utils/conversation_config";
 import { WavRenderer } from "../utils/wav_renderer";
 
@@ -61,6 +61,11 @@ export default function Main() {
   if (falApiKey !== "") {
     localStorage.setItem("tmp::fal_api_key", falApiKey);
   }
+
+  // User's name
+  const [userName, setUserName] = useState(
+    localStorage.getItem("tmp::user_name") || ""
+  );
 
   /**
    * Instantiate:
@@ -179,6 +184,11 @@ export default function Main() {
    * WavRecorder taks speech input, WavStreamPlayer output, client is API client
    */
   const connectConversation = useCallback(async () => {
+    if (!userName) {
+      alert("Please enter your name before starting the session.");
+      return;
+    }
+
     const client = clientRef.current;
     const wavRecorder = wavRecorderRef.current;
     const wavStreamPlayer = wavStreamPlayerRef.current;
@@ -200,15 +210,14 @@ export default function Main() {
     client.sendUserMessageContent([
       {
         type: `input_text`,
-        text: `Hello!`,
-        // text: `For testing purposes, I want you to list ten car brands. Number each item, e.g. "one (or whatever number you are one): the item name".`
+        text: `Hello! My name is ${userName}.`,
       },
     ]);
 
     if (client.getTurnDetectionType() === "server_vad") {
       await wavRecorder.record((data) => client.appendInputAudio(data.mono));
     }
-  }, []);
+  }, [userName]);
 
   /**
    * Disconnect and reset conversation state
@@ -335,7 +344,7 @@ export default function Main() {
     const client = clientRef.current;
 
     client.updateSession({
-      instructions: instructions,
+      instructions: createInstructions(userName),
       temperature: 0.6,
       input_audio_transcription: { model: "whisper-1" },
       turn_detection: { type: "server_vad" },
@@ -743,6 +752,16 @@ export default function Main() {
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex items-center justify-center">
         <div className="flex items-center space-x-4">
           <canvas ref={clientCanvasRef} className="w-20 h-10" />
+          <input
+            type="text"
+            value={userName}
+            onChange={(e) => {
+              setUserName(e.target.value);
+              localStorage.setItem("tmp::user_name", e.target.value);
+            }}
+            placeholder="Enter your name"
+            className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+          />
           <button
             className={cn(
               "flex items-center justify-center px-6 py-3 rounded-lg text-base font-medium transition-colors",
