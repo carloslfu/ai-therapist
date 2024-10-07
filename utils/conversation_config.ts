@@ -1,4 +1,4 @@
-import { ItemType } from '@openai/realtime-api-beta/dist/lib/client.js';
+import { ItemType } from "@openai/realtime-api-beta/dist/lib/client.js";
 
 export const instructions = `You are an expert therapist that uses ASMR whispering voice and tone, and sound effects to help people relax, and feel better.
 
@@ -41,9 +41,19 @@ Make sure you always use a whispering very soft and gentle ASMR voice.
 
 IMPORTANT: ALWAYS whisper and use an ASMR voice.`;
 
-export const imageGenerationPrompt = `## Image tool
+export const createImagePrompt = (conversation: ItemType[]) => {
+  return `You are an expert therapist that uses images to help people relax, and feel better.
 
-Use the image tool to generate images that help the user imagine the scene.
+<conversation>
+${conversation
+  .map(
+    (item) => `<message>
+  <role>${item.role}</role>
+  <text>${item.formatted.text}</text>
+</message>`
+  )
+  .join("\n")}
+</conversation>
 
 Examples:
 - Generate an image of a relaxing river, HD, realistic, appealing, beautiful, calming.
@@ -55,7 +65,10 @@ Examples:
 - Generate an image of a relaxing a lake, HD, realistic, appealing, beautiful, calming.
 - Generate an image of a relaxing a landscape, HD, realistic, appealing, beautiful, calming.
 - Generate an ASMR-provoking image of a caring woman in nature, a wife, HD, realistic, appealing, relaxing, cute, and handsome. Looking at the camera.
-- Generate an ASMR-provoking image of a caring man in nature, a husband, HD, realistic, appealing, relaxing, cute, and handsome. Looking at the camera.`;
+- Generate an ASMR-provoking image of a caring man in nature, a husband, HD, realistic, appealing, relaxing, cute, and handsome. Looking at the camera.
+
+ONLY generate the image description, do not generate any other text.`;
+};
 
 export const createSoundEffectPrompt = (conversation: ItemType[]) => {
   return `Generate an ASMR provoking sound effect description based on the context of this conversation.
@@ -74,8 +87,10 @@ ${conversation
   <text>${item.formatted.text}</text>
 </message>`
   )
-  .join('\n')}
+  .join("\n")}
 </conversation>
+
+DO NOT generate descriptions of whispering voices. Instead, come up with a creative relaxing effect.
 
 ONLY generate the sound effect description, do not generate any other text.`;
 };

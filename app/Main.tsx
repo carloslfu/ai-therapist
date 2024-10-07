@@ -9,19 +9,23 @@ import { WavRecorder, WavStreamPlayer } from "@/lib/wavtools/index.js";
 import {
   instructions,
   createSoundEffectPrompt,
+  createImagePrompt,
 } from "../utils/conversation_config";
 import { WavRenderer } from "../utils/wav_renderer";
 
-import { X, Edit, Zap, ArrowUp, ArrowDown } from "react-feather";
+import { X, Edit, ArrowUp, ArrowDown, Mic } from "react-feather";
 import { Button } from "../components/button/Button";
-import { Toggle } from "../components/toggle/Toggle";
 
 import * as fal from "@fal-ai/serverless-client";
 
-import "./Main.scss";
 import { playAudioFromResponse } from "../lib/wavtools/lib/elevenlabs_player";
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+
+const defaultImageUrl =
+  "https://fal.media/files/panda/PzxtRFOGjqQKpHl9UnE_R_50a29e0140e6470baeba760cfc1b0362.jpg";
 
 /**
  * Type for all event logs
@@ -34,7 +38,7 @@ interface RealtimeEvent {
   event: { [key: string]: any };
 }
 
-export function Main() {
+export default function Main() {
   /**
    * Ask user for API Key
    * If we're using the local relay server, we don't need this
@@ -112,8 +116,8 @@ export function Main() {
     [key: string]: boolean;
   }>({});
   const [isConnected, setIsConnected] = useState(false);
-  const [canPushToTalk, setCanPushToTalk] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
+  // const [canPushToTalk, setCanPushToTalk] = useState(false);
+  // const [isRecording, setIsRecording] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [memoryKv, setMemoryKv] = useState<{ [key: string]: any }>({});
 
@@ -150,7 +154,7 @@ export function Main() {
     }
   }, []);
 
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(defaultImageUrl);
 
   const resetElevenLabsAPIKey = useCallback(() => {
     const elevenLabsApiKey = prompt("ElevenLabs API Key");
@@ -241,47 +245,47 @@ export function Main() {
    * In push-to-talk mode, start recording
    * .appendInputAudio() for each sample
    */
-  const startRecording = async () => {
-    setIsRecording(true);
-    const client = clientRef.current;
-    const wavRecorder = wavRecorderRef.current;
-    const wavStreamPlayer = wavStreamPlayerRef.current;
-    const trackSampleOffset = await wavStreamPlayer.interrupt();
-    if (trackSampleOffset?.trackId) {
-      const { trackId, offset } = trackSampleOffset;
-      await client.cancelResponse(trackId, offset);
-    }
-    await wavRecorder.record((data) => client.appendInputAudio(data.mono));
-  };
+  // const startRecording = async () => {
+  //   setIsRecording(true);
+  //   const client = clientRef.current;
+  //   const wavRecorder = wavRecorderRef.current;
+  //   const wavStreamPlayer = wavStreamPlayerRef.current;
+  //   const trackSampleOffset = await wavStreamPlayer.interrupt();
+  //   if (trackSampleOffset?.trackId) {
+  //     const { trackId, offset } = trackSampleOffset;
+  //     await client.cancelResponse(trackId, offset);
+  //   }
+  //   await wavRecorder.record((data) => client.appendInputAudio(data.mono));
+  // };
 
   /**
    * In push-to-talk mode, stop recording
    */
-  const stopRecording = async () => {
-    setIsRecording(false);
-    const client = clientRef.current;
-    const wavRecorder = wavRecorderRef.current;
-    await wavRecorder.pause();
-    client.createResponse();
-  };
+  // const stopRecording = async () => {
+  //   setIsRecording(false);
+  //   const client = clientRef.current;
+  //   const wavRecorder = wavRecorderRef.current;
+  //   await wavRecorder.pause();
+  //   client.createResponse();
+  // };
 
   /**
    * Switch between Manual <> VAD mode for communication
    */
-  const changeTurnEndType = async (value: string) => {
-    const client = clientRef.current;
-    const wavRecorder = wavRecorderRef.current;
-    if (value === "none" && wavRecorder.getStatus() === "recording") {
-      await wavRecorder.pause();
-    }
-    client.updateSession({
-      turn_detection: value === "none" ? null : { type: "server_vad" },
-    });
-    if (value === "server_vad" && client.isConnected()) {
-      await wavRecorder.record((data) => client.appendInputAudio(data.mono));
-    }
-    setCanPushToTalk(value === "none");
-  };
+  // const changeTurnEndType = async (value: string) => {
+  //   const client = clientRef.current;
+  //   const wavRecorder = wavRecorderRef.current;
+  //   if (value === "none" && wavRecorder.getStatus() === "recording") {
+  //     await wavRecorder.pause();
+  //   }
+  //   client.updateSession({
+  //     turn_detection: value === "none" ? null : { type: "server_vad" },
+  //   });
+  //   if (value === "server_vad" && client.isConnected()) {
+  //     await wavRecorder.record((data) => client.appendInputAudio(data.mono));
+  //   }
+  //   setCanPushToTalk(value === "none");
+  // };
 
   /**
    * Auto-scroll the event logs
@@ -390,129 +394,12 @@ export function Main() {
     const wavStreamPlayer = wavStreamPlayerRef.current;
     const client = clientRef.current;
 
-    // Set instructions
-    client.updateSession({ instructions: instructions, temperature: 0.6 });
-    // Set transcription, otherwise we don't get user transcriptions back
-    client.updateSession({ input_audio_transcription: { model: "whisper-1" } });
-
-    // Add tools
-    // client.addTool(
-    //   {
-    //     name: 'set_memory',
-    //     description: 'Saves important data about the user into memory.',
-    //     parameters: {
-    //       type: 'object',
-    //       properties: {
-    //         key: {
-    //           type: 'string',
-    //           description:
-    //             'The key of the memory value. Always use lowercase and underscores, no other characters.',
-    //         },
-    //         value: {
-    //           type: 'string',
-    //           description: 'Value can be anything represented as a string',
-    //         },
-    //       },
-    //       required: ['key', 'value'],
-    //     },
-    //   },
-    //   async ({ key, value }: { [key: string]: any }) => {
-    //     setMemoryKv((memoryKv) => {
-    //       const newKv = { ...memoryKv };
-    //       newKv[key] = value;
-    //       return newKv;
-    //     });
-    //     return { ok: true };
-    //   }
-    // );
-
-    // client.addTool(
-    //   {
-    //     name: 'generate_sound_effect',
-    //     description:
-    //       'Use this tool to generate a sound effect. Examples: ASMR tapping, ASMR rubbing, relaxing nature sounds, coast waves, etc.',
-    //     parameters: {
-    //       type: 'object',
-    //       properties: {
-    //         sound: {
-    //           type: 'string',
-    //           description: 'Description of sound effect to generate.',
-    //         },
-    //         duration: {
-    //           type: 'number',
-    //           description: 'Duration of the sound effect in seconds.',
-    //         },
-    //       },
-    //       required: ['sound', 'duration'],
-    //     },
-    //   },
-    //   async ({ sound, duration }: { [key: string]: any }) => {
-    //     console.log(`generating sound (${duration}s): ${sound}`);
-
-    //     const repeatTimes = Math.ceil(duration / 22);
-
-    //     const audio =
-    //       await elevenLabsClientRef.current.textToSoundEffects.convert({
-    //         text: sound,
-    //         duration_seconds:
-    //           duration > 22 ? 22 : duration < 0.5 ? 0.5 : duration,
-    //         prompt_influence: 0.3,
-    //       });
-
-    //     console.log(`sound effect generated`);
-
-    //     setTimeout(() => {
-    //       playAudioFromResponse(
-    //         audio,
-    //         repeatTimes,
-    //         () => {},
-    //         () => {},
-    //         () => {}
-    //       );
-    //     });
-
-    //     return { ok: true };
-    //   }
-    // );
-
-    // client.addTool(
-    //   {
-    //     name: 'generate_image',
-    //     description:
-    //       'Use this tool to generate an image. Examples: a relaxing river, a relaxing ocean, a relaxing forest, a relaxing mountain, a relaxing waterfall, a relaxing beach, a relaxing a lake, a relaxing a landscape.',
-    //     parameters: {
-    //       type: 'object',
-    //       properties: {
-    //         image: {
-    //           type: 'string',
-    //           description: 'Description of image to generate.',
-    //         },
-    //       },
-    //       required: ['image'],
-    //     },
-    //   },
-    //   async ({ image }: { image: string }) => {
-    //     console.log(`generating image: ${image}`);
-
-    //     const result = await fal.subscribe('fal-ai/flux-pro/v1.1', {
-    //       input: {
-    //         prompt: image,
-    //       },
-    //       logs: true,
-    //       onQueueUpdate: (update) => {
-    //         if (update.status === 'IN_PROGRESS') {
-    //           update.logs.map((log) => log.message).forEach(console.log);
-    //         }
-    //       },
-    //     });
-
-    //     console.log('image generated', (result as any).images[0].url);
-
-    //     setImageUrl((result as any).images[0].url);
-
-    //     return { ok: true };
-    //   }
-    // );
+    client.updateSession({
+      instructions: instructions,
+      temperature: 0.6,
+      input_audio_transcription: { model: "whisper-1" },
+      turn_detection: { type: "server_vad" },
+    });
 
     // handle realtime events from client + server for event logging
     client.on("realtime.event", (realtimeEvent: RealtimeEvent) => {
@@ -577,26 +464,31 @@ export function Main() {
     if (
       items.length === 0 ||
       isPlayingRef.current ||
-      isGeneratingSoundEffectRef.current
+      isGeneratingSoundEffectRef.current ||
+      (items.length > 2 && items[items.length - 1].role !== "user")
     ) {
       return;
     }
+
+    const lastFiveMessages = items.slice(-5);
 
     isGeneratingSoundEffectRef.current = true;
 
     console.log("generating sound effect");
 
-    async function run() {
+    async function generateSoundEffect() {
       const repeatTimes = 3;
 
       const soundDescription = await generateText({
         model: openai("gpt-4o-2024-08-06"),
-        prompt: createSoundEffectPrompt(items),
+        prompt: createSoundEffectPrompt(lastFiveMessages),
         maxTokens: 4000,
         temperature: 0.3,
       });
 
       const sound = soundDescription.text;
+
+      console.log("----- sound", sound);
 
       const audio =
         await elevenLabsClientRef.current.textToSoundEffects.convert({
@@ -629,28 +521,55 @@ export function Main() {
       isGeneratingSoundEffectRef.current = false;
     }
 
-    run();
+    generateSoundEffect();
+
+    async function generateImage() {
+      const image = await generateText({
+        model: openai("gpt-4o-2024-08-06"),
+        prompt: createImagePrompt(lastFiveMessages),
+        maxTokens: 4000,
+        temperature: 0.3,
+      });
+
+      console.log("----- image", image);
+
+      const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
+        input: {
+          prompt: image,
+        },
+        logs: true,
+        onQueueUpdate: (update) => {
+          if (update.status === "IN_PROGRESS") {
+            update.logs.map((log) => log.message).forEach(console.log);
+          }
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log("image generated", (result as any).images[0].url);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setImageUrl((result as any).images[0].url);
+    }
+
+    generateImage();
   }, [items]);
 
   /**
    * Render the application
    */
   return (
-    <div data-component="ConsolePage">
-      <div className="content-top">
-        <div className="content-title">
-          <span>AI Therapist (ASMR)</span>
-        </div>
-        <div className="content-api-key">
+    <div className="flex flex-col h-screen">
+      <div className="p-2 bg-gray-100 flex items-center justify-between">
+        <h1 className="text-lg font-bold">AI Therapist (ASMR)</h1>
+        <div className="flex space-x-2">
           <Button
             icon={Edit}
             iconPosition="end"
             buttonStyle="flush"
-            label={`api key: ${apiKey.slice(0, 3)}...`}
+            label={`OpenAI key: ${apiKey.slice(0, 3)}...`}
             onClick={() => resetAPIKey()}
           />
-        </div>
-        <div className="content-api-key">
           <Button
             icon={Edit}
             iconPosition="end"
@@ -658,8 +577,6 @@ export function Main() {
             label={`ElevenLabs key: ${elevenLabsApiKey.slice(0, 3)}...`}
             onClick={() => resetElevenLabsAPIKey()}
           />
-        </div>
-        <div className="content-api-key">
           <Button
             icon={Edit}
             iconPosition="end"
@@ -669,38 +586,95 @@ export function Main() {
           />
         </div>
       </div>
-      <div className="content-main">
-        <div className="content-logs">
-          <div className="content-block events">
-            <div className="visualization">
-              <div className="visualization-entry client">
-                <canvas ref={clientCanvasRef} />
-              </div>
-              <div className="visualization-entry server">
-                <canvas ref={serverCanvasRef} />
+      <Tabs defaultValue="user" className="flex-grow overflow-hidden">
+        <TabsList className="bg-white border-b">
+          <TabsTrigger value="user">User View</TabsTrigger>
+          <TabsTrigger value="debug">Debug View</TabsTrigger>
+        </TabsList>
+        <TabsContent value="user" className="h-full overflow-auto p-4">
+          <div className="h-full flex flex-row">
+            <div className="w-1/2 pr-2">
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt="Generated image"
+                  className="w-full h-auto mb-4 rounded-lg"
+                />
+              )}
+            </div>
+            <div className="w-1/2 pl-2 flex flex-col">
+              <div className="flex-grow overflow-auto bg-white rounded-lg shadow">
+                <h2 className="text-lg font-semibold p-4 border-b">
+                  Conversation
+                </h2>
+                <div className="p-4">
+                  {!items.length && (
+                    <p>Start a conversation by clicking the button below.</p>
+                  )}
+                  {items.map((conversationItem) => (
+                    <div key={conversationItem.id} className="mb-4">
+                      <div
+                        className={`font-bold ${
+                          conversationItem.role === "user"
+                            ? "text-blue-600"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {(
+                          conversationItem.role || conversationItem.type
+                        ).replaceAll("_", " ")}
+                      </div>
+                      <div className="mt-1">
+                        {conversationItem.formatted.transcript ||
+                          conversationItem.formatted.text ||
+                          "(truncated)"}
+                        {conversationItem.formatted.file && (
+                          <audio
+                            src={conversationItem.formatted.file.url}
+                            controls
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="content-block-title">events</div>
-            <div className="content-block-body" ref={eventsScrollRef}>
-              {!realtimeEvents.length && `awaiting connection...`}
-              {realtimeEvents.map((realtimeEvent) => {
-                const count = realtimeEvent.count;
-                const event = { ...realtimeEvent.event };
-                if (event.type === "input_audio_buffer.append") {
-                  event.audio = `[trimmed: ${event.audio.length} bytes]`;
-                } else if (event.type === "response.audio.delta") {
-                  event.delta = `[trimmed: ${event.delta.length} bytes]`;
-                }
-                return (
-                  <div className="event" key={event.event_id}>
-                    <div className="event-timestamp">
-                      {formatTime(realtimeEvent.time)}
-                    </div>
-                    <div className="event-details">
+          </div>
+        </TabsContent>
+        <TabsContent value="debug" className="h-full overflow-auto p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-semibold mb-4">Events</h2>
+              <div className="mb-4">
+                <div className="flex space-x-2">
+                  <div className="w-1/2">
+                    <canvas ref={clientCanvasRef} className="w-full" />
+                  </div>
+                  <div className="w-1/2">
+                    <canvas ref={serverCanvasRef} className="w-full" />
+                  </div>
+                </div>
+              </div>
+              <div ref={eventsScrollRef} className="h-64 overflow-auto">
+                {!realtimeEvents.length && <p>Awaiting connection...</p>}
+                {realtimeEvents.map((realtimeEvent) => {
+                  const count = realtimeEvent.count;
+                  const event = { ...realtimeEvent.event };
+                  if (event.type === "input_audio_buffer.append") {
+                    event.audio = `[trimmed: ${event.audio.length} bytes]`;
+                  } else if (event.type === "response.audio.delta") {
+                    event.delta = `[trimmed: ${event.delta.length} bytes]`;
+                  }
+                  return (
+                    <div key={event.event_id} className="mb-2">
+                      <div className="text-sm text-gray-500">
+                        {formatTime(realtimeEvent.time)}
+                      </div>
                       <div
-                        className="event-summary"
+                        className="cursor-pointer"
                         onClick={() => {
-                          // toggle event details
                           const id = event.event_id;
                           const expanded = { ...expandedEvents };
                           if (expanded[id]) {
@@ -711,68 +685,70 @@ export function Main() {
                           setExpandedEvents(expanded);
                         }}
                       >
-                        <div
-                          className={`event-source ${
+                        <span
+                          className={`font-semibold ${
                             event.type === "error"
-                              ? "error"
-                              : realtimeEvent.source
+                              ? "text-red-600"
+                              : realtimeEvent.source === "client"
+                              ? "text-blue-600"
+                              : "text-green-600"
                           }`}
                         >
                           {realtimeEvent.source === "client" ? (
-                            <ArrowUp />
+                            <ArrowUp className="inline" />
                           ) : (
-                            <ArrowDown />
+                            <ArrowDown className="inline" />
                           )}
-                          <span>
-                            {event.type === "error"
-                              ? "error!"
-                              : realtimeEvent.source}
-                          </span>
-                        </div>
-                        <div className="event-type">
+                          {event.type === "error"
+                            ? "Error!"
+                            : realtimeEvent.source}
+                        </span>
+                        <span className="ml-2">
                           {event.type}
                           {count && ` (${count})`}
-                        </div>
+                        </span>
                       </div>
                       {!!expandedEvents[event.event_id] && (
-                        <div className="event-payload">
+                        <pre className="text-xs bg-gray-100 p-2 mt-1 rounded">
                           {JSON.stringify(event, null, 2)}
-                        </div>
+                        </pre>
                       )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="content-block conversation">
-            <div className="content-block-title">conversation</div>
-            <div className="content-block-body" data-conversation-content>
-              {!items.length && `awaiting connection...`}
-              {items.map((conversationItem) => {
-                return (
-                  <div className="conversation-item" key={conversationItem.id}>
-                    <div className={`speaker ${conversationItem.role || ""}`}>
-                      <div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-semibold mb-4">Conversation</h2>
+              <div className="h-96 overflow-auto">
+                {!items.length && <p>Awaiting connection...</p>}
+                {items.map((conversationItem) => (
+                  <div key={conversationItem.id} className="mb-4">
+                    <div className="flex justify-between items-center">
+                      <span
+                        className={`font-bold ${
+                          conversationItem.role === "user"
+                            ? "text-blue-600"
+                            : "text-green-600"
+                        }`}
+                      >
                         {(
                           conversationItem.role || conversationItem.type
                         ).replaceAll("_", " ")}
-                      </div>
-                      <div
-                        className="close"
+                      </span>
+                      <button
                         onClick={() =>
                           deleteConversationItem(conversationItem.id)
                         }
+                        className="text-red-600 hover:text-red-800"
                       >
-                        <X />
-                      </div>
+                        <X size={16} />
+                      </button>
                     </div>
-                    <div className={`speaker-content`}>
-                      {/* tool response */}
+                    <div className="mt-1">
                       {conversationItem.type === "function_call_output" && (
                         <div>{conversationItem.formatted.output}</div>
                       )}
-                      {/* tool call */}
                       {!!conversationItem.formatted.tool && (
                         <div>
                           {conversationItem.formatted.tool.name}(
@@ -801,54 +777,69 @@ export function Main() {
                         <audio
                           src={conversationItem.formatted.file.url}
                           controls
+                          className="mt-2"
                         />
                       )}
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-semibold mb-4">set_memory()</h2>
+              <pre className="text-xs bg-gray-100 p-2 rounded">
+                {JSON.stringify(memoryKv, null, 2)}
+              </pre>
             </div>
           </div>
-          <div className="content-actions">
-            <Toggle
-              defaultValue={false}
-              labels={["manual", "vad"]}
-              values={["none", "server_vad"]}
-              onChange={(_, value) => changeTurnEndType(value)}
-            />
-            <div className="spacer" />
-            {isConnected && canPushToTalk && (
-              <Button
-                label={isRecording ? "release to send" : "push to talk"}
-                buttonStyle={isRecording ? "alert" : "regular"}
-                disabled={!isConnected || !canPushToTalk}
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-              />
-            )}
-            <div className="spacer" />
-            <Button
-              label={isConnected ? "disconnect" : "connect"}
-              iconPosition={isConnected ? "end" : "start"}
-              icon={isConnected ? X : Zap}
-              buttonStyle={isConnected ? "regular" : "action"}
-              onClick={
-                isConnected ? disconnectConversation : connectConversation
-              }
-            />
-          </div>
-        </div>
-        <div className="content-right">
-          <div className="content-block map">
-            {imageUrl && <img src={imageUrl} />}
-          </div>
-          <div className="content-block kv">
-            <div className="content-block-title">set_memory()</div>
-            <div className="content-block-body content-kv">
-              {JSON.stringify(memoryKv, null, 2)}
-            </div>
-          </div>
-        </div>
+        </TabsContent>
+      </Tabs>
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex items-center justify-center">
+        {/* <Toggle
+          defaultValue={true}
+          labels={["manual", "vad"]}
+          values={["none", "server_vad"]}
+          onChange={(_, value) => changeTurnEndType(value)}
+        /> */}
+        {/* {isConnected && canPushToTalk && (
+          <Button
+            label={isRecording ? "release to send" : "push to talk"}
+            buttonStyle={isRecording ? "alert" : "regular"}
+            disabled={!isConnected || !canPushToTalk}
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+          />
+        )} */}
+        {/* <Button
+          label={isConnected ? "disconnect" : "connect"}
+          iconPosition={isConnected ? "end" : "start"}
+          icon={isConnected ? X : Zap}
+          buttonStyle={isConnected ? "regular" : "action"}
+          onClick={isConnected ? disconnectConversation : connectConversation}
+        /> */}
+
+        <button
+          className={cn(
+            "flex items-center justify-center px-6 py-3 rounded-lg text-base font-medium transition-colors",
+            "focus:outline-none focus:ring-2 focus:ring-offset-2",
+            isConnected
+              ? "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500"
+              : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+          )}
+          onClick={isConnected ? disconnectConversation : connectConversation}
+        >
+          {isConnected ? (
+            <>
+              <X className="mr-3 h-5 w-5" />
+              <span className="text-lg">Finish session</span>
+            </>
+          ) : (
+            <>
+              <Mic className="mr-3 h-5 w-5" />
+              <span className="text-lg">Start session</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
