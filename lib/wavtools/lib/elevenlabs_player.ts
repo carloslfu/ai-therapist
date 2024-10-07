@@ -16,7 +16,7 @@ export function playAudioFromResponse(
   const audio = new Audio();
   audio.src = URL.createObjectURL(mediaSource);
   audio.volume = 0.8;
-  audio.loop = true;
+  audio.loop = false;
 
   // stop all other audio elements, and remove them from the audioElements array and dispose of them
   audioElements.forEach((element) => {
