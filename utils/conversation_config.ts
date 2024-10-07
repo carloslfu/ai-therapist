@@ -77,7 +77,7 @@ export const createSoundEffectPrompt = (imageDescription: string) => {
 ${imageDescription}
 </image_description>
 
-Make it 420 characters or less.
+Make it 320 characters or less. It should be short, like a few phrases.
 
 ONLY generate the sound effect description, do not generate any other text.`;
 };
