@@ -224,7 +224,7 @@ export default function Main() {
     setRealtimeEvents([]);
     setItems([]);
     setMemoryKv({});
-    setImageUrl(null);
+    setImageUrl(defaultImageUrl);
 
     const client = clientRef.current;
     client.disconnect();
@@ -240,52 +240,6 @@ export default function Main() {
     const client = clientRef.current;
     client.deleteItem(id);
   }, []);
-
-  /**
-   * In push-to-talk mode, start recording
-   * .appendInputAudio() for each sample
-   */
-  // const startRecording = async () => {
-  //   setIsRecording(true);
-  //   const client = clientRef.current;
-  //   const wavRecorder = wavRecorderRef.current;
-  //   const wavStreamPlayer = wavStreamPlayerRef.current;
-  //   const trackSampleOffset = await wavStreamPlayer.interrupt();
-  //   if (trackSampleOffset?.trackId) {
-  //     const { trackId, offset } = trackSampleOffset;
-  //     await client.cancelResponse(trackId, offset);
-  //   }
-  //   await wavRecorder.record((data) => client.appendInputAudio(data.mono));
-  // };
-
-  /**
-   * In push-to-talk mode, stop recording
-   */
-  // const stopRecording = async () => {
-  //   setIsRecording(false);
-  //   const client = clientRef.current;
-  //   const wavRecorder = wavRecorderRef.current;
-  //   await wavRecorder.pause();
-  //   client.createResponse();
-  // };
-
-  /**
-   * Switch between Manual <> VAD mode for communication
-   */
-  // const changeTurnEndType = async (value: string) => {
-  //   const client = clientRef.current;
-  //   const wavRecorder = wavRecorderRef.current;
-  //   if (value === "none" && wavRecorder.getStatus() === "recording") {
-  //     await wavRecorder.pause();
-  //   }
-  //   client.updateSession({
-  //     turn_detection: value === "none" ? null : { type: "server_vad" },
-  //   });
-  //   if (value === "server_vad" && client.isConnected()) {
-  //     await wavRecorder.record((data) => client.appendInputAudio(data.mono));
-  //   }
-  //   setCanPushToTalk(value === "none");
-  // };
 
   /**
    * Auto-scroll the event logs
@@ -332,10 +286,6 @@ export default function Main() {
     const render = () => {
       if (isLoaded) {
         if (clientCanvas) {
-          if (!clientCanvas.width || !clientCanvas.height) {
-            clientCanvas.width = clientCanvas.offsetWidth;
-            clientCanvas.height = clientCanvas.offsetHeight;
-          }
           clientCtx = clientCtx || clientCanvas.getContext("2d");
           if (clientCtx) {
             clientCtx.clearRect(0, 0, clientCanvas.width, clientCanvas.height);
@@ -354,10 +304,6 @@ export default function Main() {
           }
         }
         if (serverCanvas) {
-          if (!serverCanvas.width || !serverCanvas.height) {
-            serverCanvas.width = serverCanvas.offsetWidth;
-            serverCanvas.height = serverCanvas.offsetHeight;
-          }
           serverCtx = serverCtx || serverCanvas.getContext("2d");
           if (serverCtx) {
             serverCtx.clearRect(0, 0, serverCanvas.width, serverCanvas.height);
@@ -493,7 +439,7 @@ export default function Main() {
 
       console.log("----- imagePrompt", imagePrompt);
 
-      const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
+      const imageResult = await fal.subscribe("fal-ai/flux-pro/v1.1", {
         input: {
           prompt: imagePrompt,
         },
@@ -506,10 +452,11 @@ export default function Main() {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log("image generated", (result as any).images[0].url);
+      const imageUrlResult = (imageResult as any).images[0].url;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setImageUrl((result as any).images[0].url);
+      console.log("----- imageUrlResult", imageUrlResult);
+
+      setImageUrl(imageUrlResult);
 
       // ---- Audio generation
 
@@ -603,6 +550,27 @@ export default function Main() {
                   className="w-full h-auto mb-4 rounded-lg"
                 />
               )}
+              <div className="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 className="text-lg font-semibold mb-2">
+                  Audio Visualization
+                </h2>
+                <div className="flex space-x-2">
+                  <div className="w-1/2">
+                    <h3 className="text-sm font-medium mb-1">Input</h3>
+                    <canvas
+                      ref={clientCanvasRef}
+                      className="w-full h-20 bg-gray-100 rounded"
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <h3 className="text-sm font-medium mb-1">Output</h3>
+                    <canvas
+                      ref={serverCanvasRef}
+                      className="w-full h-20 bg-gray-100 rounded"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="w-1/2 pl-2 flex flex-col">
               <div className="flex-grow overflow-auto bg-white rounded-lg shadow">
@@ -652,10 +620,10 @@ export default function Main() {
               <div className="mb-4">
                 <div className="flex space-x-2">
                   <div className="w-1/2">
-                    <canvas ref={clientCanvasRef} className="w-full" />
+                    <canvas ref={clientCanvasRef} className="w-full h-20" />
                   </div>
                   <div className="w-1/2">
-                    <canvas ref={serverCanvasRef} className="w-full" />
+                    <canvas ref={serverCanvasRef} className="w-full h-20" />
                   </div>
                 </div>
               </div>
@@ -797,29 +765,6 @@ export default function Main() {
         </TabsContent>
       </Tabs>
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex items-center justify-center">
-        {/* <Toggle
-          defaultValue={true}
-          labels={["manual", "vad"]}
-          values={["none", "server_vad"]}
-          onChange={(_, value) => changeTurnEndType(value)}
-        /> */}
-        {/* {isConnected && canPushToTalk && (
-          <Button
-            label={isRecording ? "release to send" : "push to talk"}
-            buttonStyle={isRecording ? "alert" : "regular"}
-            disabled={!isConnected || !canPushToTalk}
-            onMouseDown={startRecording}
-            onMouseUp={stopRecording}
-          />
-        )} */}
-        {/* <Button
-          label={isConnected ? "disconnect" : "connect"}
-          iconPosition={isConnected ? "end" : "start"}
-          icon={isConnected ? X : Zap}
-          buttonStyle={isConnected ? "regular" : "action"}
-          onClick={isConnected ? disconnectConversation : connectConversation}
-        /> */}
-
         <button
           className={cn(
             "flex items-center justify-center px-6 py-3 rounded-lg text-base font-medium transition-colors",
