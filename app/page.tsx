@@ -1,5 +1,5 @@
-import { ConsolePage } from "./ConsolePage";
+import { Main } from "./Main";
 
 export default function Home() {
-  return <ConsolePage />;
+  return <Main />;
 }

@@ -18,7 +18,7 @@ import { Toggle } from "../components/toggle/Toggle";
 
 import * as fal from "@fal-ai/serverless-client";
 
-import "./ConsolePage.scss";
+import "./Main.scss";
 import { playAudioFromResponse } from "../lib/wavtools/lib/elevenlabs_player";
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -34,7 +34,7 @@ interface RealtimeEvent {
   event: { [key: string]: any };
 }
 
-export function ConsolePage() {
+export function Main() {
   /**
    * Ask user for API Key
    * If we're using the local relay server, we don't need this
